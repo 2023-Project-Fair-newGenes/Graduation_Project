@@ -19,7 +19,7 @@ import binascii
 import gzip
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
-from sklearn.externals import joblib
+import joblib
 from sklearn.model_selection import KFold, GridSearchCV
 
 FORMAT = '%(levelname)-7s %(asctime)-15s %(name)-15s %(message)s'
