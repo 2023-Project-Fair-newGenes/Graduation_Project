@@ -19,6 +19,7 @@ import binascii
 import gzip
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
+import lightgbm as lgb
 import joblib
 from sklearn.model_selection import KFold, GridSearchCV
 
@@ -218,6 +219,9 @@ class Classifier:
         elif kind.upper() == "GB" or kind.upper() == "GRADIENTBOOST":
             self.kind = "GB"
             self.clf = GradientBoostingClassifier(n_estimators=n_trees)
+        elif kind.upper() == "LGBM" or kind.upper() == "LIGHTGBM":
+            self.kind = "LGBM"
+            self.clf = lgb.LGBMClassifier(n_estimators=n_trees, force_row_wise=True)
         else:
             logger = logging.getLogger(self.__class__.__name__)
             logger.error("No such type of classifier exist.")
@@ -309,7 +313,10 @@ class VCFApply(_VCFExtract):
 
     def apply(self):
         self.predict_y = self.classifier.predict(self.data)
-        self.predict_y_log_proba = self.classifier.predict_log_proba(self.data)
+        if self.classifier.kind in ["LGBM", "LightGBM"]:
+            probabilities = self.classifier.predict_proba(self.data)
+            self.predict_y_log_proba = np.log(probabilities)
+
 
     def _is_gzip(self, file):
         with open(file, 'rb') as f:
