@@ -17,9 +17,10 @@ import csv
 import os
 import binascii
 import gzip
+import joblib
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
-import joblib
+from sklearn.svm import SVC
 from sklearn.model_selection import KFold, GridSearchCV
 
 FORMAT = '%(levelname)-7s %(asctime)-15s %(name)-15s %(message)s'
@@ -218,7 +219,11 @@ class Classifier:
         elif kind.upper() == "GB" or kind.upper() == "GRADIENTBOOST":
             self.kind = "GB"
             self.clf = GradientBoostingClassifier(n_estimators=n_trees)
+        elif kind.upper() == "SVM" or kind.upper() == "SUPPORTVECTOR":
+            self.kind = "SVM"
+            self.clf = SVC(C=1.0, kernel='linear')
         else:
+            print("model is "+kind)
             logger = logging.getLogger(self.__class__.__name__)
             logger.error("No such type of classifier exist.")
         self.features = features
@@ -253,6 +258,12 @@ class Classifier:
                 'n_estimators': np.arange(50, 251, 10),
                 'learning_rate': np.logspace(-4, 0, 10),
             }
+        elif self.kind == "SVM":
+            parameters = {
+                'C': np.logspace(-3, 3, 7),
+                'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+            }
+
 
         logger.info(f"Kind: {self.kind}, {self.clf}")
         self.clf = GridSearchCV(self.clf, parameters, scoring='f1', n_jobs=n_jobs, cv=kfold, refit=True)
@@ -374,4 +385,6 @@ class VCFApply(_VCFExtract):
             outfile.write('\n'.join(['\t'.join(var) for var in chunk]))
         t1 = time.time()
         self.logger.info("Finish output filtered result, time elapsed {:.3f}s".format(t1 - t0))
+
+
 
