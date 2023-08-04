@@ -21,6 +21,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
 import joblib
 from sklearn.model_selection import KFold, GridSearchCV
+from xgboost import XGBClassifier
 
 FORMAT = '%(levelname)-7s %(asctime)-15s %(name)-15s %(message)s'
 logging.basicConfig(level='INFO', format=FORMAT)
@@ -218,6 +219,9 @@ class Classifier:
         elif kind.upper() == "GB" or kind.upper() == "GRADIENTBOOST":
             self.kind = "GB"
             self.clf = GradientBoostingClassifier(n_estimators=n_trees)
+        elif kind.upper() == "XG" or kind.upper() == "XGBOOST":
+            self.kind = "XG"
+            self.clf = XGBClassifier(n_estimators=n_trees, objective='binary:logistic', max_depth=6)
         else:
             logger = logging.getLogger(self.__class__.__name__)
             logger.error("No such type of classifier exist.")
@@ -252,6 +256,12 @@ class Classifier:
             parameters = {
                 'n_estimators': np.arange(50, 251, 10),
                 'learning_rate': np.logspace(-4, 0, 10),
+            }
+        elif self.kind == "XG":
+            parameters = {
+                'n_estimators': [50, 100, 150, 200, 250],
+                'learning_rate': [0.00001, 0.0001, 0.001, 0.01, 0.1, 1],
+                'max_depth': [3, 6, 9]
             }
 
         logger.info(f"Kind: {self.kind}, {self.clf}")
@@ -308,8 +318,13 @@ class VCFApply(_VCFExtract):
             self.logger.warning("Features not match! Missing features: {}, excessive features: {}".format(this_feature - clf_feature, clf_feature - this_feature))
 
     def apply(self):
-        self.predict_y = self.classifier.predict(self.data)
-        self.predict_y_log_proba = self.classifier.predict_log_proba(self.data)
+        print(self.kind)
+        if self.kind == "XG":
+            self.predict_y = self.classifier.predict(self.data)
+            self.predict_y_log_proba = self.classifier.predict_proba(self.data)
+        else:
+            self.predict_y = self.classifier.predict(self.data)
+            self.predict_y_log_proba = self.classifier.predict_log_proba(self.data)
 
     def _is_gzip(self, file):
         with open(file, 'rb') as f:

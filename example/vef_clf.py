@@ -29,8 +29,9 @@ python vef_clf.py --happy path/to/NA12878.vcf.happy.vcf --target path/to/NA12878
 
     optional = parser.add_argument_group("optional arguments")
     optional.add_argument("-n", "--num_trees", help="number of trees, default = 150", type=int, default=150)
-    optional.add_argument("--kind", choices=["RF", "RandomForest", "AB", "AdaBoost", "GB", "GradientBoost"], type=str, default="RF",
-            help="kind of ensemble methods, available values: RandomForest (RF), AdaBoost (AB), GradientBoost(GB); default = RF")
+    optional.add_argument("--kind", choices=["RF", "RandomForest", "AB", "AdaBoost", "GB", "GradientBoost", "XG", "XGBoost"],
+                          type=str, default="RF",
+                          help="kind of ensemble methods, available values: RandomForest (RF), AdaBoost (AB), GradientBoost(GB), XGBoost (XG); default = RF")
 
     args = parser.parse_args()
     vcf_hap = args.happy
