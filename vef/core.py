@@ -245,30 +245,30 @@ class Classifier:
         logger = logging.getLogger(self.__class__.__name__)
         logger.info("Begin grid search")
         t0 = time.time()
-        kfold = KFold(n_splits=k_fold, shuffle=True)
-        if self.kind == "RF":
-            parameters = {
-                'n_estimators': list(range(50, 251, 10)),
-            }
-        elif self.kind == "GB":
-            parameters = {
-                'n_estimators': np.arange(50, 251, 10),
-                'learning_rate': np.logspace(-5, 0, 10),
-            }
-        elif self.kind == "AB":
-            parameters = {
-                'n_estimators': np.arange(50, 251, 10),
-                'learning_rate': np.logspace(-4, 0, 10),
-            }
-        elif self.kind == "SVM":
-            parameters = {
-                'C': np.logspace(-3, 3, 7),
-                'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
-            }
+        # kfold = KFold(n_splits=k_fold, shuffle=True)
+        # if self.kind == "RF":
+        #     parameters = {
+        #         'n_estimators': list(range(50, 251, 10)),
+        #     }
+        # elif self.kind == "GB":
+        #     parameters = {
+        #         'n_estimators': np.arange(50, 251, 10),
+        #         'learning_rate': np.logspace(-5, 0, 10),
+        #     }
+        # elif self.kind == "AB":
+        #     parameters = {
+        #         'n_estimators': np.arange(50, 251, 10),
+        #         'learning_rate': np.logspace(-4, 0, 10),
+        #     }
+        if self.kind == "SVM":
+            parameters = {'C': [0.1, 1, 10, 100, 1000],
+                            'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
+                            'kernel': ['rbf']}
 
 
         logger.info(f"Kind: {self.kind}, {self.clf}")
-        self.clf = GridSearchCV(self.clf, parameters, scoring='f1', n_jobs=n_jobs, cv=kfold, refit=True)
+        # self.clf = GridSearchCV(self.clf, parameters, scoring='f1', n_jobs=n_jobs, cv=kfold, refit=True)
+        self.clf = GridSearchCV(self.clf, parameters, verbose = 3)
         self.clf.fit(X, y)
         print(self.clf.cv_results_, '\n', self.clf.best_params_)
         logger.debug("Grid_scores: {}".format(self.clf.cv_results_))
