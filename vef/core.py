@@ -210,6 +210,8 @@ class Classifier:
     """Ensemble classifier."""
 
     def __init__(self, features, n_trees=150, kind="RF"):
+        self.kind = kind
+
         if kind.upper() == "RF" or kind.upper() == "RANDOMFOREST":
             self.kind = "RF"
             self.clf = RandomForestClassifier(criterion='gini', max_depth=20, n_estimators=n_trees)
