@@ -41,9 +41,9 @@ python vef_clf.py --happy path/to/NA12878.vcf.happy.vcf --target path/to/NA12878
     dataset = VCFDataset(vcf_hap, vcf_tgt, mode)
     X, y = dataset.get_dataset('*')
 
-    clf = Classifier(dataset.features, n_trees, kind)
-    clf.fit(X, y)
-    clf.save(vcf_tgt + ".vef_{}_{}.n_{}.clf".format(mode.lower(), kind, n_trees))
+    # clf = Classifier(dataset.features, n_trees, kind)
+    # clf.fit(X, y)
+    # clf.save(vcf_tgt + ".vef_{}_{}.n_{}.clf".format(mode.lower(), kind, n_trees))
 
 if __name__ == '__main__':
     main()
