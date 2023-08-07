@@ -47,7 +47,6 @@ python vef_grid_search.py --happy path/to/NA12878.vcf.happy.vcf --target path/to
     X, y = dataset.get_dataset('*')
 
     clf = Classifier(dataset.features, kind=kind)
-    
     clf.gridsearch(X, y, fold, jobs)
     # clf.save(vcf_tgt + ".vef_{}_grid.clf".format(mode.lower()))
 

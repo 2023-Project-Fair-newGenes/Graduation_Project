@@ -209,7 +209,7 @@ class VCFDataset:
 class Classifier:
     """Ensemble classifier."""
 
-    def __init__(self, features, n_trees=150, kind="RF"):
+    def __init__(self, features, n_trees=150, kind="SVM"):
         self.kind = kind
 
         if kind.upper() == "RF" or kind.upper() == "RANDOMFOREST":
@@ -223,7 +223,7 @@ class Classifier:
             self.clf = GradientBoostingClassifier(n_estimators=n_trees)
         elif kind.upper() == "SVM" or kind.upper() == "SUPPORTVECTOR":
             self.kind = "SVM"
-            self.clf = SVC(C=1.0, kernel='linear')
+            self.clf = SVC()
         else:
             print("model is "+kind)
             logger = logging.getLogger(self.__class__.__name__)
@@ -245,30 +245,22 @@ class Classifier:
         logger = logging.getLogger(self.__class__.__name__)
         logger.info("Begin grid search")
         t0 = time.time()
-        # kfold = KFold(n_splits=k_fold, shuffle=True)
-        # if self.kind == "RF":
-        #     parameters = {
-        #         'n_estimators': list(range(50, 251, 10)),
-        #     }
-        # elif self.kind == "GB":
-        #     parameters = {
-        #         'n_estimators': np.arange(50, 251, 10),
-        #         'learning_rate': np.logspace(-5, 0, 10),
-        #     }
-        # elif self.kind == "AB":
-        #     parameters = {
-        #         'n_estimators': np.arange(50, 251, 10),
-        #         'learning_rate': np.logspace(-4, 0, 10),
-        #     }
+        kfold = KFold(random_state = 30, n_splits=k_fold, shuffle=True)
+
         if self.kind == "SVM":
-            parameters = {'C': [0.1, 1, 10, 100, 1000],
-                            'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
-                            'kernel': ['rbf']}
+            parameters = {'C': [0.1,0.8,0.9,1,1.1,1.2,1.3,1.4],
+                            'gamma': [0.1,0.8,0.9,1,1.1,1.2,1.3,1.4],
+                            'kernel': ['linear', 'rbf']
+        }
 
 
         logger.info(f"Kind: {self.kind}, {self.clf}")
         # self.clf = GridSearchCV(self.clf, parameters, scoring='f1', n_jobs=n_jobs, cv=kfold, refit=True)
-        self.clf = GridSearchCV(self.clf, parameters, verbose = 3)
+        # self.clf = GridSearchCV(self.clf, parameters, verbose = 3)
+        self.clf = GridSearchCV(self.clf,parameters,
+                        scoring='f1', n_jobs=n_jobs, cv=kfold,
+                        verbose = 2, refit=True
+                        )
         self.clf.fit(X, y)
         print(self.clf.cv_results_, '\n', self.clf.best_params_)
         logger.debug("Grid_scores: {}".format(self.clf.cv_results_))
@@ -322,7 +314,10 @@ class VCFApply(_VCFExtract):
 
     def apply(self):
         self.predict_y = self.classifier.predict(self.data)
-        self.predict_y_log_proba = self.classifier.predict_log_proba(self.data)
+        if self.classifier.kind in ["SVM", "SUPPORTVECTOR"]:
+            probabilities = self.classifier.predict_proba(self.data)
+            self.predict_y_log_proba = np.log(probabilities)
+        # self.predict_y_log_proba = self.classifier.predict_log_proba(self.data)
 
     def _is_gzip(self, file):
         with open(file, 'rb') as f:
