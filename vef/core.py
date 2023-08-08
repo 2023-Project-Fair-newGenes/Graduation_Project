@@ -267,7 +267,7 @@ class Classifier:
                       'kernel': ['rbf']
                           }
             logger.info(f"Kind: {self.kind}, {self.clf}")
-            grid = GridSearchCV(svc_grid, parameters, refit=True, verbose=3)
+            grid = GridSearchCV(self.clf, parameters, refit=True, verbose=3)
             grid.fit(X, y)
             print(grid.best_params_)
             t1 = time.time()
