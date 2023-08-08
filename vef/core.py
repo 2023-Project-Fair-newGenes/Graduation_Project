@@ -242,25 +242,41 @@ class Classifier:
         logger.info("Elapsed time {:.3f}s".format(t1 - t0))
 
     def gridsearch(self, X, y, k_fold=5, n_jobs=2):
+
         logger = logging.getLogger(self.__class__.__name__)
         logger.info("Begin grid search")
         t0 = time.time()
-        kfold = KFold(random_state = 30, n_splits=k_fold, shuffle=True)
-
-        if self.kind == "SVM":
-            parameters = {'C': [0.1,0.8,0.9,1,1.1,1.2,1.3,1.4],
-                            'gamma': [0.1,0.8,0.9,1,1.1,1.2,1.3,1.4],
-                            'kernel': ['linear', 'rbf']
-        }
-
+        kfold = KFold(n_splits=k_fold, shuffle=True)
+        if self.kind == "RF":
+            parameters = {
+                'n_estimators': list(range(50, 251, 10)),
+            }
+        elif self.kind == "GB":
+            parameters = {
+                'n_estimators': np.arange(50, 251, 10),
+                'learning_rate': np.logspace(-5, 0, 10),
+            }
+        elif self.kind == "AB":
+            parameters = {
+                'n_estimators': np.arange(50, 251, 10),
+                'learning_rate': np.logspace(-4, 0, 10),
+            }
+        elif self.kind == "SVM":
+            parameters = {'C': [0.1, 1, 10, 100, 1000],
+                      'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
+                      'kernel': ['rbf']
+                          }
+            logger.info(f"Kind: {self.kind}, {self.clf}")
+            grid = GridSearchCV(svc_grid, parameters, refit=True, verbose=3)
+            grid.fit(X, y)
+            print(grid.best_params_)
+            t1 = time.time()
+            logger.info("Finish training model")
+            logger.info("Elapsed time {:.3f}s".format(t1 - t0))
+            return
 
         logger.info(f"Kind: {self.kind}, {self.clf}")
-        # self.clf = GridSearchCV(self.clf, parameters, scoring='f1', n_jobs=n_jobs, cv=kfold, refit=True)
-        # self.clf = GridSearchCV(self.clf, parameters, verbose = 3)
-        self.clf = GridSearchCV(self.clf,parameters,
-                        scoring='f1', n_jobs=n_jobs, cv=kfold,
-                        verbose = 2, refit=True
-                        )
+        self.clf = GridSearchCV(self.clf, parameters, scoring='f1', n_jobs=n_jobs, cv=kfold, refit=True)
         self.clf.fit(X, y)
         print(self.clf.cv_results_, '\n', self.clf.best_params_)
         logger.debug("Grid_scores: {}".format(self.clf.cv_results_))
