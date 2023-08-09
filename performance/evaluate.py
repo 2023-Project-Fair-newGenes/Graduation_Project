@@ -28,12 +28,9 @@ def model_evaluation(X, y, clf):
     logger.info("[accuracy_score] : {}".format(accuracy_score(y_test, y_pred)))
     logger.info("[classification_report] \n{}".format(classification_report(y_test, y_pred)))
 
-    # Optuna로 하이퍼파라미터 최적화
-    study = optuna.create_study(direction='maximize')
-    study.optimize(lambda trial: objective(trial, X_train, y_train, X_test, y_test), n_trials=100)
 
     # 최적의 하이퍼파라미터 값 출력
-    best_params = study.best_params
+    best_params = {'C':1000, 'gamma':0.0001, 'kernel':'rbf'}
     print("Best Hyperparameters:", best_params)
 
     # 최적의 하이퍼파라미터로 모델 훈련
@@ -67,7 +64,7 @@ def model_evaluation(X, y, clf):
     plt.title('Receiver Operating Characteristic (ROC)')
     plt.legend(loc='lower right')
     # plt.show()
-    save_path = r'../plt/model_performance_LGBM_pre&best.png'
+    save_path = r'../plt/model_performance_SVM_pre&best.png'
     plt.savefig(save_path)
 
 # Objective 함수 정의
