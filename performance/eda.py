@@ -108,11 +108,17 @@ class VCFData:
         self.logger.info("Start extracting label from {}".format(os.path.abspath(self.hap_vcf.filepath)))
         VAR_PREFIX = 'variants/'
         mode_list = ['SNP', 'INDEL']
+        # hap VCF 파일에서 필요한 필드를 읽어옴, data에 저장
         data = allel.read_vcf(self.hap_vcf.filepath,
                               fields=['calldata/BVT', 'variants/Regions', 'variants/POS', 'variants/CHROM'])
+        # data['variants/Regions']에서 읽어온 데이터를 부울(Boolean) 형태로 변환하여 conf_mask 변수에 할당
+        # 변이 호출 결과에서 고신뢰도 영역에 해당하는 변이들을 표시
+        # True : 고신뢰도 영역에 해당하는 변이를 나타냄 // False : 고신뢰도 영역에 해당하지 않는 변이를 나타냄
         conf_mask = data['variants/Regions'].astype(bool)
+
         self.logger.info(
             "Total variants(hap.py): {}, in high-conf region variants: {}".format(conf_mask.shape[0], int(sum(conf_mask))))
+
         if mode.upper() in mode_list:
             extract_target_vartype = self._extract_factory(np.where(self.hap_vcf.samples == 'TRUTH')[0][0], mode.upper())
         else:
@@ -130,45 +136,49 @@ class VCFData:
             _, idx, cnt = np.unique(label_list[key][0, :], return_index=True, return_counts=True)
             label_list[key] = label_list[key][:, idx[cnt <= 1]]
         self.logger.info("Finish extracting label from file")
-        data = allel.read_vcf(self.specimen_vcf.filepath, fields='*')
 
+        data = allel.read_vcf(self.specimen_vcf.filepath, fields='*')
         self.logger.info("Start extracting variants from {}".format(os.path.abspath(self.specimen_vcf.filepath)))
+
         # feature selection
         num_var = np.shape(data[VAR_PREFIX + 'REF'])[0]
+
         self.features = [(VAR_PREFIX + k) for k in list(self.specimen_vcf.header.infos.keys()) + ['QUAL']]
         # self.features = [ftr for ftr in self.features if np.issubdtype(data[ftr].dtype, np.number)]
         # self.features = [ftr for ftr in self.features if np.sum(np.isnan(data[ftr])) < 0.01 * num_var]
         # self.features = [ftr for ftr in self.features if np.nanvar(data[ftr]) >= 0.1]
+
         features_avoid = [VAR_PREFIX + 'VQSLOD']
         for ftr in features_avoid:
             if ftr in self.features:
                 self.features.remove(ftr)
         self.features.sort()
 
-        annotes = [data[ftr] for ftr in self.features]
+        # merge features, with CHROM, POS
+        annotes = [data[ftr] for ftr in [VAR_PREFIX + 'POS'] + self.features]
         annotes = np.vstack([c if c.ndim == 1 else c[:, 0] for c in annotes])
+        chrom_list = data[VAR_PREFIX + 'CHROM']
+        self.contigs = list(label_list)
+        annotes_chrom = {ch: annotes[:, np.where(chrom_list == ch)[0]] for ch in self.contigs}
 
-        annotes_df = pd.DataFrame(annotes.T, columns=self.features)
+        for ch in self.contigs:
+            if ch not in label_list:
+                continue
+            else:
+                annotes_idx = np.where(np.isin(annotes_chrom[ch][0], label_list[ch][0]))[0]
+                label_idx = np.where(np.isin(label_list[ch][0], annotes_chrom[ch][0]))[0]
+                self.dataset[ch] = np.vstack(
+                    (annotes_chrom[ch][1:, annotes_idx], label_list[ch][1, label_idx])).transpose()
 
-        pd.set_option('display.max_columns', None)
-        print(annotes_df.head())
+                data_array = np.vstack((annotes_chrom[ch][1:, annotes_idx], label_list[ch][1, label_idx])).transpose()
 
-        # chrom_list = data[VAR_PREFIX + 'CHROM']
-        # self.contigs = list(label_list)
-        # annotes_chrom = {ch: annotes[:, np.where(chrom_list == ch)[0]] for ch in self.contigs}
-        #
-        # y_list = []
-        #
-        # for ch in self.contigs:
-        #     if ch not in label_list:
-        #         continue
-        #     else:
-        #         annotes_idx = np.where(np.isin(annotes_chrom[ch][0], label_list[ch][0]))[0]
-        #         label_idx = np.where(np.isin(label_list[ch][0], annotes_chrom[ch][0]))[0]
-        #         y_values = label_list[ch][1, label_idx]  # 'y' 값들을 추출하여 y_values에 저장
-        #         y_list.extend(y_values)  # y 값을 y_list에 추가
-        #
-        # # y_list 확인
-        # print(y_list)
+                # 데이터프레임으로 변환
+                columns = self.features + ['Label']
+                df = pd.DataFrame(data_array, columns=columns)
+
+                pd.set_option('display.max_columns', None)
+                print(df.head())
+
+                # TODO : 여기서 시각화 코드 찍어보기
 
         return self
