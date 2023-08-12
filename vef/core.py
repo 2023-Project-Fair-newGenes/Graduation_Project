@@ -399,5 +399,3 @@ class VCFApply(_VCFExtract):
         t1 = time.time()
         self.logger.info("Finish output filtered result, time elapsed {:.3f}s".format(t1 - t0))
 
-
-
