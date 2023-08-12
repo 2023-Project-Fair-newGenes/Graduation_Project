@@ -52,22 +52,9 @@ python vef_clf.py --happy path/to/NA12878.vcf.happy.vcf --target path/to/NA12878
     dataset = VCFDataset(vcf_hap, vcf_tgt, mode)
     X, y = dataset.get_dataset('*')
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
     clf = Classifier(dataset.features, n_trees, kind)
-    clf.gridsearch(X, y, 5, 2)
-    clf.fit(X_train, y_train)
-
-
-    y_probs = clf.predict_proba(X_test)[:, 1]
-
-    fpr, tpr, thresholds = roc_curve(y_test, y_probs)
-
-    roc_auc = auc(fpr, tpr)
-    
-    
+    clf.fit(X, y)
     clf.save(vcf_tgt + ".vef_{}_{}.n_{}.clf".format(mode.lower(), kind, n_trees))
-
 
     plt.figure(figsize=(8, 6))
     plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (AUC = {:.2f})'.format(roc_auc))

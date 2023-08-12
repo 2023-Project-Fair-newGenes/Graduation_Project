@@ -20,6 +20,7 @@ import gzip
 import joblib
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
+import joblib
 from sklearn.svm import SVC
 from sklearn.model_selection import KFold, GridSearchCV
 
@@ -334,7 +335,7 @@ class VCFApply(_VCFExtract):
             probabilities = self.classifier.predict_proba(self.data)
             self.predict_y_log_proba = np.log(probabilities)
         # self.predict_y_log_proba = self.classifier.predict_log_proba(self.data)
-
+        
     def _is_gzip(self, file):
         with open(file, 'rb') as f:
             return binascii.hexlify(f.read(2)) == b'1f8b'
