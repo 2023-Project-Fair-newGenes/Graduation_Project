@@ -1,8 +1,11 @@
+import sys
+sys.path.append('..')
+# print(sys.path)
 
 import argparse
 from vef import VCFDataset, Classifier
-from performance import *
-
+# from ./performance/ import *
+from performance.performance_evaluate import *
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -11,7 +14,7 @@ Evaluate model performance
 -------------------------
 Example of use
 
-python evaluate.py --happy path/to/NA12878.vcf.happy.vcf --target path/to/NA12878.vcf --mode SNP --num_trees 150 --kind RF
+python performance_evaluate.py --happy path/to/NA12878.vcf.happy.vcf --target path/to/NA12878.vcf --mode SNP --num_trees 150 --kind RF
             ''')
     requiredNamed = parser.add_argument_group("required named arguments")
     requiredNamed.add_argument("--happy", help="hap.py annoted target VCF file", required=True)
@@ -21,12 +24,8 @@ python evaluate.py --happy path/to/NA12878.vcf.happy.vcf --target path/to/NA1287
 
     optional = parser.add_argument_group("optional arguments")
     optional.add_argument("-n", "--num_trees", help="number of trees, default = 150", type=int, default=150)
-    optional.add_argument("--kind", choices=["SVM", "SUPPORTVECTOR"], type=str, default="RF",
+    optional.add_argument("--kind", choices=["SVM", "SUPPORTVECTOR"], type=str, default="SVM",
             help="..")
-    optional.add_argument("--performance",
-                          choices=["ALL"],
-                          type=str,
-                          help="Model Performance Assessment, available values: ALL")
 
     args = parser.parse_args()
     vcf_hap = args.happy
@@ -34,7 +33,6 @@ python evaluate.py --happy path/to/NA12878.vcf.happy.vcf --target path/to/NA1287
     mode = args.mode
     n_trees = args.num_trees
     kind = args.kind
-    performance = args.performance
 
     dataset = VCFDataset(vcf_hap, vcf_tgt, mode)
     X, y = dataset.get_dataset('*')

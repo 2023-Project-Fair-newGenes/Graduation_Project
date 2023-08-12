@@ -9,11 +9,11 @@ from sklearn.metrics import classification_report
 
 import matplotlib.pyplot as plt
 import numpy as np
-import optuna
 from sklearn.metrics import roc_curve, auc
 
 FORMAT = '%(levelname)-7s %(asctime)-15s %(name)-15s %(message)s'
 logging.basicConfig(level='INFO', format=FORMAT)
+
 def model_evaluation(X, y, clf):
     logger = logging.getLogger('logger')
     logger.info('NA12878 ch11 데이터셋을 train과 test로 split해 테스트 진행 ')
@@ -34,7 +34,8 @@ def model_evaluation(X, y, clf):
     print("Best Hyperparameters:", best_params)
 
     # 최적의 하이퍼파라미터로 모델 훈련
-    best_model = SVC.train(best_params, SVC.Dataset(X_train, label=y_train), 100)
+    best_model = SVC(**best_params)  # 하이퍼파라미터를 사용하여 모델 객체 생성
+    best_model.fit(X_train, y_train)  # 훈련 데이터로 모델 학습
 
     # 테스트 데이터로 모델 평가
     y_p = np.rint(best_model.predict(X_test))
@@ -43,18 +44,18 @@ def model_evaluation(X, y, clf):
     logger.info("[classification_report] \n{}".format(classification_report(y_test, y_p)))
 
     # ROC curve로 시각화
-    y_probs = clf.predict_proba(X_test)[:, 1]
+    y_predict = clf.predict(X_test)
+    fpr_pre, tpr_pre, _ = roc_curve(y_test, y_predict)
+    roc_auc_pre = auc(fpr_pre, tpr_pre)
 
-    pre_tuned_fpr, pre_tuned_tpr, thresholds = roc_curve(y_test, y_probs)
-    roc_auc_pre = auc(pre_tuned_fpr, pre_tuned_tpr)
-    best_tuned_fpr, best_tuned_tpr, thresholds = roc_curve(y_test, y_p)
-    roc_auc_best = auc(best_tuned_fpr, best_tuned_tpr)
+    fpr_best, tpr_best, _ = roc_curve(y_test, y_p)
+    roc_auc_best = auc(fpr_best, tpr_best)
 
     plt.figure(figsize=(8, 6))
-    plt.plot(pre_tuned_fpr, pre_tuned_tpr, color='blue', lw=2,
-             label='Pre-tuned ROC curve (area = %0.2f)'.format(roc_auc_pre))
-    plt.plot(best_tuned_fpr, best_tuned_tpr, color='darkorange', lw=2,
-             label='Best-tuned ROC curve (area = %0.2f)'.format(roc_auc_best))
+    plt.plot(fpr_pre, tpr_pre, color='blue', lw=2,
+             label='Pre-tuned ROC curve (area = %0.2f)' % roc_auc_pre)
+    plt.plot(fpr_best, tpr_best, color='darkorange', lw=2,
+             label='Best-tuned ROC curve (area = %0.2f)' % roc_auc_best)
 
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
     plt.xlim([0.0, 1.0])
@@ -63,9 +64,9 @@ def model_evaluation(X, y, clf):
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic (ROC)')
     plt.legend(loc='lower right')
-    # plt.show()
-    save_path = r'../plt/model_performance_SVM_pre&best.png'
-    plt.savefig(save_path)
+    plt.show()
+    # save_path = r'../plt/model_performance_SVM_pre&best.png'
+    # plt.savefig(save_path)
 
 # Objective 함수 정의
 def objective(trial, X_train, y_train, X_test, y_test):
