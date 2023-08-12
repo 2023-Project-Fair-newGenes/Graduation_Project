@@ -17,10 +17,11 @@ import csv
 import os
 import binascii
 import gzip
+import joblib
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
-import lightgbm as lgb
 import joblib
+from sklearn.svm import SVC
 from sklearn.model_selection import KFold, GridSearchCV
 
 FORMAT = '%(levelname)-7s %(asctime)-15s %(name)-15s %(message)s'
@@ -209,7 +210,9 @@ class VCFDataset:
 class Classifier:
     """Ensemble classifier."""
 
-    def __init__(self, features, n_trees=150, kind="RF"):
+    def __init__(self, features, n_trees=150, kind="SVM"):
+        self.kind = kind
+
         if kind.upper() == "RF" or kind.upper() == "RANDOMFOREST":
             self.kind = "RF"
             self.clf = RandomForestClassifier(criterion='gini', max_depth=20, n_estimators=n_trees)
@@ -219,10 +222,11 @@ class Classifier:
         elif kind.upper() == "GB" or kind.upper() == "GRADIENTBOOST":
             self.kind = "GB"
             self.clf = GradientBoostingClassifier(n_estimators=n_trees)
-        elif kind.upper() == "LGBM" or kind.upper() == "LIGHTGBM":
-            self.kind = "LGBM"
-            self.clf = lgb.LGBMClassifier(n_estimators=n_trees, force_row_wise=True)
+        elif kind.upper() == "SVM" or kind.upper() == "SUPPORTVECTOR":
+            self.kind = "SVM"
+            self.clf = SVC()
         else:
+            print("model is "+kind)
             logger = logging.getLogger(self.__class__.__name__)
             logger.error("No such type of classifier exist.")
         self.features = features
@@ -239,6 +243,7 @@ class Classifier:
         logger.info("Elapsed time {:.3f}s".format(t1 - t0))
 
     def gridsearch(self, X, y, k_fold=5, n_jobs=2):
+
         logger = logging.getLogger(self.__class__.__name__)
         logger.info("Begin grid search")
         t0 = time.time()
@@ -257,6 +262,19 @@ class Classifier:
                 'n_estimators': np.arange(50, 251, 10),
                 'learning_rate': np.logspace(-4, 0, 10),
             }
+        elif self.kind == "SVM":
+            parameters = {'C': [0.1, 1, 10, 100, 1000],
+                      'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
+                      'kernel': ['rbf']
+                          }
+            logger.info(f"Kind: {self.kind}, {self.clf}")
+            grid = GridSearchCV(self.clf, parameters, refit=True, verbose=3)
+            grid.fit(X, y)
+            print(grid.best_params_)
+            t1 = time.time()
+            logger.info("Finish training model")
+            logger.info("Elapsed time {:.3f}s".format(t1 - t0))
+            return
 
         logger.info(f"Kind: {self.kind}, {self.clf}")
         self.clf = GridSearchCV(self.clf, parameters, scoring='f1', n_jobs=n_jobs, cv=kfold, refit=True)
@@ -313,11 +331,11 @@ class VCFApply(_VCFExtract):
 
     def apply(self):
         self.predict_y = self.classifier.predict(self.data)
-        if self.classifier.kind in ["LGBM", "LightGBM"]:
+        if self.classifier.kind in ["SVM", "SUPPORTVECTOR"]:
             probabilities = self.classifier.predict_proba(self.data)
             self.predict_y_log_proba = np.log(probabilities)
-
-
+        # self.predict_y_log_proba = self.classifier.predict_log_proba(self.data)
+        
     def _is_gzip(self, file):
         with open(file, 'rb') as f:
             return binascii.hexlify(f.read(2)) == b'1f8b'
