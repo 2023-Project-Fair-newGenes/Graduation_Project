@@ -56,17 +56,5 @@ python vef_clf.py --happy path/to/NA12878.vcf.happy.vcf --target path/to/NA12878
     clf.fit(X, y)
     clf.save(vcf_tgt + ".vef_{}_{}.n_{}.clf".format(mode.lower(), kind, n_trees))
 
-    plt.figure(figsize=(8, 6))
-    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (AUC = {:.2f})'.format(roc_auc))
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver Operating Characteristic (ROC)')
-    plt.legend(loc='lower right')
-    plt.show()
-
-
 if __name__ == '__main__':
     main()
