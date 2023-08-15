@@ -243,7 +243,6 @@ class Classifier:
         self.clf.fit(X, y, sample_weight=sample_weight)
         logger.info("Training a".format())
         # logger.debug("Importance: {}".format(self.clf.feature_importances_))
-        # logger.debug("Importance: {}".format(self.clf.feature_importances_))
         t1 = time.time()
         logger.info("Finish training model")
         logger.info("Elapsed time {:.3f}s".format(t1 - t0))
