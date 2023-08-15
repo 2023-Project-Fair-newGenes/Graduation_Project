@@ -21,8 +21,9 @@ import joblib
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
 import joblib
-from sklearn.svm import SVC
 from sklearn.model_selection import KFold, GridSearchCV
+from sklearn.svm import SVC
+import lightgbm as lgb
 
 FORMAT = '%(levelname)-7s %(asctime)-15s %(name)-15s %(message)s'
 logging.basicConfig(level='INFO', format=FORMAT)
@@ -224,7 +225,11 @@ class Classifier:
             self.clf = GradientBoostingClassifier(n_estimators=n_trees)
         elif kind.upper() == "SVM" or kind.upper() == "SUPPORTVECTOR":
             self.kind = "SVM"
-            self.clf = SVC()
+            self.clf = SVC(C = 1000, gamma = 0.0001, kernel = 'rbf')
+        elif kind.upper() == "LGBM" or kind.upper() == "LIGHTGBM":
+            self.kind = "LGBM"
+            self.clf = lgb.LGBMClassifier(n_estimators=n_trees, force_row_wise=True, num_leaves = 96, learning_rate = 0.024733289023679998,
+                                          feature_fraction = 0.8439020417557227, bagging_fraction = 0.21552726628147978, min_child_samples = 86)
         else:
             print("model is "+kind)
             logger = logging.getLogger(self.__class__.__name__)
@@ -237,7 +242,8 @@ class Classifier:
         t0 = time.time()
         self.clf.fit(X, y, sample_weight=sample_weight)
         logger.info("Training a".format())
-        logger.debug("Importance: {}".format(self.clf.feature_importances_))
+        # logger.debug("Importance: {}".format(self.clf.feature_importances_))
+        # logger.debug("Importance: {}".format(self.clf.feature_importances_))
         t1 = time.time()
         logger.info("Finish training model")
         logger.info("Elapsed time {:.3f}s".format(t1 - t0))
@@ -331,7 +337,7 @@ class VCFApply(_VCFExtract):
 
     def apply(self):
         self.predict_y = self.classifier.predict(self.data)
-        if self.classifier.kind in ["SVM", "SUPPORTVECTOR"]:
+        if self.classifier.kind in ["SVM", "SUPPORTVECTOR", "LGBM", "LightGBM"]:
             probabilities = self.classifier.predict_proba(self.data)
             self.predict_y_log_proba = np.log(probabilities)
         # self.predict_y_log_proba = self.classifier.predict_log_proba(self.data)
