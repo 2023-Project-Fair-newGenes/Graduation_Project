@@ -20,14 +20,13 @@ import gzip
 import joblib
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
-import joblib
 from sklearn.model_selection import KFold, GridSearchCV
 from sklearn.svm import SVC
 import lightgbm as lgb
+from xgboost import XGBClassifier
 
 FORMAT = '%(levelname)-7s %(asctime)-15s %(name)-15s %(message)s'
 logging.basicConfig(level='INFO', format=FORMAT)
-
 
 class _VCFExtract:
     """Extract data from VCF file."""
@@ -230,6 +229,9 @@ class Classifier:
             self.kind = "LGBM"
             self.clf = lgb.LGBMClassifier(n_estimators=n_trees, force_row_wise=True, num_leaves = 96, learning_rate = 0.024733289023679998,
                                           feature_fraction = 0.8439020417557227, bagging_fraction = 0.21552726628147978, min_child_samples = 86)
+        elif kind.upper() == "XG" or kind.upper() == "XGBOOST":
+            self.kind = "XG"
+            self.clf = XGBClassifier(n_estimators=n_trees, objective='binary:logistic', max_depth=6)
         else:
             print("model is "+kind)
             logger = logging.getLogger(self.__class__.__name__)
@@ -248,7 +250,6 @@ class Classifier:
         logger.info("Elapsed time {:.3f}s".format(t1 - t0))
 
     def gridsearch(self, X, y, k_fold=5, n_jobs=2):
-
         logger = logging.getLogger(self.__class__.__name__)
         logger.info("Begin grid search")
         t0 = time.time()
@@ -272,6 +273,7 @@ class Classifier:
                       'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
                       'kernel': ['rbf']
                           }
+        
             logger.info(f"Kind: {self.kind}, {self.clf}")
             grid = GridSearchCV(self.clf, parameters, refit=True, verbose=3)
             grid.fit(X, y)
@@ -280,6 +282,12 @@ class Classifier:
             logger.info("Finish training model")
             logger.info("Elapsed time {:.3f}s".format(t1 - t0))
             return
+        elif self.kind == "XG":
+            parameters = {
+                'n_estimators': [50, 100, 150, 200, 250],
+                'learning_rate': [0.00001, 0.0001, 0.001, 0.01, 0.1, 1],
+                'max_depth': [3, 6, 9]
+            }
 
         logger.info(f"Kind: {self.kind}, {self.clf}")
         self.clf = GridSearchCV(self.clf, parameters, scoring='f1', n_jobs=n_jobs, cv=kfold, refit=True)
@@ -336,7 +344,7 @@ class VCFApply(_VCFExtract):
 
     def apply(self):
         self.predict_y = self.classifier.predict(self.data)
-        if self.classifier.kind in ["SVM", "SUPPORTVECTOR", "LGBM", "LightGBM"]:
+        if self.classifier.kind in ["SVM", "SUPPORTVECTOR", "LGBM", "LightGBM", "XG", "XGBOOST"]:
             probabilities = self.classifier.predict_proba(self.data)
             self.predict_y_log_proba = np.log(probabilities)
         # self.predict_y_log_proba = self.classifier.predict_log_proba(self.data)
