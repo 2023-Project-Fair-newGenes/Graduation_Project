@@ -30,8 +30,8 @@ python vef_grid_search.py --happy path/to/NA12878.vcf.happy.vcf --target path/to
     optional = parser.add_argument_group("optional arguments")
     optional.add_argument("--fold", help="number of k-fold cross validation, default = 5", type=int, default=5)
     optional.add_argument("--jobs", help="number of parallel process, default = 1", type=int, default=1)
-    optional.add_argument("--kind", choices=["RF", "RandomForest", "AB", "AdaBoost", "GB", "GradientBoost","SVM","SupportVecotr"], type=str, default="RF",
-            help="kind of ensemble methods, available values: RandomForest (RF), AdaBoost (AB), GradientBoost(GB), SupportVecotr(SVM); default = RF")
+    optional.add_argument("--kind", choices=["RF", "RandomForest", "AB", "AdaBoost", "GB", "GradientBoost","SVM","SupportVecotr", "XG", "XGBoost"], type=str, default="RF",
+            help="kind of ensemble methods, available values: RandomForest (RF), AdaBoost (AB), GradientBoost(GB), SupportVecotr(SVM), XGBoost(XG); default = RF")
 
     args = parser.parse_args()
     vcf_hap = args.happy
