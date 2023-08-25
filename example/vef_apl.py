@@ -28,10 +28,6 @@ python vef_apl.py --clf_file path/to/NA12878.vcf.vef_snp.clf --subject path/to/s
     requiredNamed.add_argument("--suffix", help="suffix of filtered VCF file", required=True)
     requiredNamed.add_argument("--mode", help="mode, SNP or INDEL", choices=["SNP", "INDEL"], required=True)
 
-    optional = parser.add_argument_group("optional arguments")
-    optional.add_argument("--kind", help="kind of ensemble methods, available values: RandomForest (RF), AdaBoost (AB), GradientBoost(GB), XGBoost (XG); default = RF",
-              choices=["RF", "RandomForest", "AB", "AdaBoost", "GB", "GradientBoost", "XG", "XGBoost"], default="XG")
-
     args = parser.parse_args()
     clf_file = args.clf_file
     vcf_sub = args.subject
