@@ -231,7 +231,7 @@ class Classifier:
                                           feature_fraction = 0.8439020417557227, bagging_fraction = 0.21552726628147978, min_child_samples = 86)
         elif kind.upper() == "XG" or kind.upper() == "XGBOOST":
             self.kind = "XG"
-            self.clf = XGBClassifier(n_estimators=n_trees, objective='binary:logistic', max_depth=6)
+            self.clf = XGBClassifier(n_estimators=200, objective='binary:logistic', max_depth=3, learning_rate = 0.1)
         else:
             print("model is "+kind)
             logger = logging.getLogger(self.__class__.__name__)
