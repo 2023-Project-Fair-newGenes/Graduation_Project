@@ -224,7 +224,7 @@ class Classifier:
             self.clf = GradientBoostingClassifier(n_estimators=n_trees)
         elif kind.upper() == "SVM" or kind.upper() == "SUPPORTVECTOR":
             self.kind = "SVM"
-            self.clf = SVC(C = 1000, gamma = 0.0001, kernel = 'rbf')
+            self.clf = SVC(C = 1000, gamma = 0.0001, kernel = 'rbf', probability=True)
         elif kind.upper() == "LGBM" or kind.upper() == "LIGHTGBM":
             self.kind = "LGBM"
             self.clf = lgb.LGBMClassifier(n_estimators=n_trees, force_row_wise=True, num_leaves = 96, learning_rate = 0.024733289023679998,
