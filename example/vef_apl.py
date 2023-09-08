@@ -1,9 +1,3 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-# Copyright © 2018 Chuanyi Zhang <chuanyi5@illinois.edu>
-#
-# Distributed under terms of the MIT license.
 
 """
 Apply classifiers
@@ -33,10 +27,9 @@ python vef_apl.py --clf_file path/to/NA12878.vcf.vef_snp.clf --subject path/to/s
     vcf_sub = args.subject
     suf = args.suffix
     mode = args.mode
-    kind = args.kind
 
     clf = Classifier.load(clf_file)
-    apply = VCFApply(vcf_sub, clf, mode, kind)
+    apply = VCFApply(vcf_sub, clf, mode)
     apply.apply()
     apply.write_filtered(vcf_sub + ".{}.vcf".format(suf))
 
