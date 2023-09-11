@@ -1,8 +1,7 @@
 import logging
 from vef import VCFDataset, Classifier
 
-import lightgbm as lgb
-from xgboost import XGBClassifier as xg
+import xgboost as xg
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
@@ -33,10 +32,13 @@ def model_evaluation(X, y, clf):
     print("Best Hyperparameters:", best_params)
 
     # 최적의 하이퍼파라미터로 모델 훈련
-    best_model = xg.train(best_params, xg.Dataset(X_train, label=y_train), 100)
+    dtrain = xg.DMatrix(data=X_train, label=y_train)
+    dtest = xg.DMatrix(data=X_test, label=y_test)
+
+    best_model = xg.train(best_params, dtrain, 100)
 
     # 테스트 데이터로 모델 평가
-    y_p = np.rint(best_model.predict(X_test))
+    y_p = np.rint(best_model.predict(dtest))
     logger.info('하이퍼 파라미터 설정 후 accuracy_score, classification_report')
     logger.info("[accuracy_score] : {}".format(accuracy_score(y_test, y_p)))
     logger.info("[classification_report] \n{}".format(classification_report(y_test, y_p)))
