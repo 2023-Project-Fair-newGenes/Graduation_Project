@@ -1,15 +1,3 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-vef.core
-~~~~~~~~
-
-This module implements the core features of VEF.
-
-:copyright: © 2018 by Chuanyi Zhang.
-:license: MIT, see LICENSE for more details.
-"""
-
 import allel
 import time
 import logging
@@ -243,7 +231,7 @@ class Classifier:
         logger.info("Begin training model")
         t0 = time.time()
         self.clf.fit(X, y, sample_weight=sample_weight)
-        logger.info("Training a".format())
+        logger.info("Training a {}".format(self.kind))
         # logger.debug("Importance: {}".format(self.clf.feature_importances_))
         t1 = time.time()
         logger.info("Finish training model")

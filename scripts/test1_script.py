@@ -1,53 +1,32 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-# Copyright © 2018 Chuanyi Zhang <chuanyi5@illinois.edu>
-#
-# Distributed under terms of the MIT license.
-
 """
-Train and save VEF classifiers
+Train ch11 dataset, test ch20 dataset
 """
-import argparse
-from vef import VCFDataset, Classifier
-import numpy as np
-import pandas as pd
-import seaborn as sns
+from src import VCFDataset, Classifier
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import roc_curve, roc_auc_score, auc
 from sklearn.model_selection import train_test_split
 
+import logging
 
+FORMAT = '%(levelname)-7s %(asctime)-15s %(name)-15s %(message)s'
+logging.basicConfig(level='INFO', format=FORMAT)
 
 def main():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description='''\
-Train a filter
--------------------------
-Example of use
+    logger = logging.getLogger('Test')
+    logger.info('-----NA12878 ch11 데이터셋을 train과 test로 split해 테스트 진행-----')
 
-python vef_clf.py --happy path/to/NA12878.vcf.happy.vcf --target path/to/NA12878.vcf --mode SNP --num_trees 150 --kind RF
-            ''')
-    requiredNamed = parser.add_argument_group("required named arguments")
-    requiredNamed.add_argument("--happy", help="hap.py annoted target VCF file", required=True)
-    requiredNamed.add_argument("--target", help="target pipeline VCF file", required=True)
-    requiredNamed.add_argument("--mode", help="mode, SNP or INDEL", required=True,
-            choices=["SNP", "INDEL"])
+    vcf_hap = "../dataset/NA12878_chr11.indel.vcf.gz.happy.vcf.gz"
+    vcf_tgt = "../dataset/NA12878_chr11.indel.vcf.gz"
+    mode = "INDEL"
+    n_trees = 150
 
-    optional = parser.add_argument_group("optional arguments")
-    optional.add_argument("-n", "--num_trees", help="number of trees, default = 150", type=int, default=150)
-
-    args = parser.parse_args()
-    vcf_hap = args.happy
-    vcf_tgt = args.target
-    mode = args.mode
-    n_trees = args.num_trees
-
+    # 데이터셋 준비
+    logger.info('-----데이터 셋 준비-----')
     dataset = VCFDataset(vcf_hap, vcf_tgt, mode)
     X, y = dataset.get_dataset('*')
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1, stratify=y)
 
     # 모델 초기화
     rf_model = Classifier(dataset.features, n_trees, 'RF')
@@ -55,18 +34,21 @@ python vef_clf.py --happy path/to/NA12878.vcf.happy.vcf --target path/to/NA12878
     svm_model = Classifier(dataset.features, n_trees, 'SVM')
     xgb_model = Classifier(dataset.features, n_trees, 'XG')
 
+    logger.info('-----train 진행-----')
     # 각 모델 학습
     rf_model.fit(X_train, y_train)
     lgbm_model.fit(X_train, y_train)
     svm_model.fit(X_train, y_train)
     xgb_model.fit(X_train, y_train)
 
+    logger.info('-----test 진행-----')
     # 각 모델 예측 확률
     rf_probs = rf_model.predict_proba(X_test)[:, 1]
     lgbm_probs = lgbm_model.predict_proba(X_test)[:, 1]
     svm_probs = svm_model.predict_proba(X_test)[:, 1]
     xgb_probs = xgb_model.predict_proba(X_test)[:, 1]
 
+    logger.info('-----ROC, AUC 계산-----')
     # AUC 계산
     rf_auc = roc_auc_score(y_test, rf_probs)
     lgbm_auc = roc_auc_score(y_test, lgbm_probs)
@@ -92,9 +74,10 @@ python vef_clf.py --happy path/to/NA12878.vcf.happy.vcf --target path/to/NA12878
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic (ROC) Curve')
     plt.legend(loc='lower right')
-    save_path = r'../plt/performance_by_model.png'
+    save_path = r'../plt_results/performance_by_model.png'
     plt.savefig(save_path)
 
+    logger.info('-----TEST 완료-----')
 
 if __name__ == '__main__':
     main()
