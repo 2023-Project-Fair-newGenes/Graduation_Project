@@ -14,25 +14,32 @@ logging.basicConfig(level='INFO', format=FORMAT)
 
 def main():
     logger = logging.getLogger('Test')
-    logger.info('-----NA12878 ch11 데이터셋을 train과 test로 split해 테스트 진행-----')
+    logger.info('-----NA12878 ch11 데이터셋 train, ch20 데이터 셋 test 진행-----')
 
-    vcf_hap = "../dataset/NA12878_chr11.indel.vcf.gz.happy.vcf.gz"
-    vcf_tgt = "../dataset/NA12878_chr11.indel.vcf.gz"
     mode = "INDEL"
     n_trees = 150
 
-    # 데이터셋 준비
-    logger.info('-----데이터 셋 준비-----')
-    dataset = VCFDataset(vcf_hap, vcf_tgt, mode)
-    X, y = dataset.get_dataset('*')
+    # train 데이터셋 준비
+    vcf_hap_train = "../dataset/NA12878_chr11.indel.vcf.gz.happy.vcf.gz"
+    vcf_tgt_test = "../dataset/NA12878_chr11.indel.vcf.gz"
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1, stratify=y)
+    logger.info('-----train 데이터 셋 준비-----')
+    dataset_train = VCFDataset(vcf_hap_train, vcf_tgt_test, mode)
+    X_train, y_train = dataset_train.get_dataset('*')
+
+    # test 데이터셋 준비
+    vcf_hap_test = "../dataset/NA12878_chr20.indel.vcf.gz.happy.vcf.gz"
+    vcf_tgt_test = "../dataset/NA12878_chr20.indel.vcf.gz"
+
+    logger.info('-----test 데이터 셋 준비-----')
+    dataset_test = VCFDataset(vcf_hap_test, vcf_tgt_test, mode)
+    X_test, y_test = dataset_test.get_dataset('*')
 
     # 모델 초기화
-    rf_model = Classifier(dataset.features, n_trees, 'RF')
-    lgbm_model = Classifier(dataset.features, n_trees, 'LGBM')
-    svm_model = Classifier(dataset.features, n_trees, 'SVM')
-    xgb_model = Classifier(dataset.features, n_trees, 'XG')
+    rf_model = Classifier(dataset_train.features, n_trees, 'RF')
+    lgbm_model = Classifier(dataset_train.features, n_trees, 'LGBM')
+    svm_model = Classifier(dataset_train.features, n_trees, 'SVM')
+    xgb_model = Classifier(dataset_train.features, n_trees, 'XG')
 
     logger.info('-----train 진행-----')
     # 각 모델 학습
@@ -72,9 +79,9 @@ def main():
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('Receiver Operating Characteristic (ROC) Curve\nch11 dataset 70% train, 30% test')
+    plt.title('Receiver Operating Characteristic (ROC) Curve\nch11 train, ch20 test')
     plt.legend(loc='lower right')
-    save_path = r'../plt_results/performance_by_model_test1.png'
+    save_path = r'../plt_results/performance_by_model_test2.png'
     plt.savefig(save_path)
 
     logger.info('-----TEST 완료-----')
