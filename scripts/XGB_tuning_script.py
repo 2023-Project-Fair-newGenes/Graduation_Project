@@ -2,7 +2,6 @@
 Train ch11 dataset, test ch20 dataset
 """
 from src import VCFDataset, Classifier, XGB_tuning
-
 import logging
 
 FORMAT = '%(levelname)-7s %(asctime)-15s %(name)-15s %(message)s'
@@ -16,7 +15,7 @@ def main():
     vcf_tgt = "../dataset/NA12878_chr11.indel.vcf.gz"
     mode = "INDEL"
     n_trees = 150
-    kind = "GB"
+    kind = "XG"
 
     # 데이터셋 준비
     logger.info('-----데이터 셋 준비-----')
