@@ -82,7 +82,7 @@ class _VCFExtract:
         features[nan_idx] = mean[nan_idx[1]]
 
 
-class VCFDataset:
+class VCFDataset_FS:
     """Compare VCF files and prepare features/labels for training.
 
     :param str hap_filepath: filepath to happy output VCF.
