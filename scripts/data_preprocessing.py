@@ -1,4 +1,4 @@
-from src.feature_selection import VCFDataset, Classifier
+from src.feature_selection import VCFDataset_FS, Classifier
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -19,7 +19,7 @@ def main():
 
     print(nan_threshold)
     for num in nan_threshold:
-        dataset = VCFDataset(vcf_hap, vcf_tgt, mode, num)
+        dataset = VCFDataset_FS(vcf_hap, vcf_tgt, mode, num)
         X, y = dataset.get_dataset('*')
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
