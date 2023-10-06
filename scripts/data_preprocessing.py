@@ -1,4 +1,4 @@
-from src.feature_selection import VCFDataset_FS, Classifier
+from src.feature_selection import VCFDataset_FS, Classifier_FS
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -24,7 +24,7 @@ def main():
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-        clf = Classifier(dataset.features, n_trees, kind)
+        clf = Classifier_FS(dataset.features, n_trees, kind)
 
         clf.fit(X_train, y_train)
 
