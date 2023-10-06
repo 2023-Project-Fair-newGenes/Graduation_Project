@@ -26,6 +26,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 import lightgbm as lgb
 import pandas as pd
+from xgboost import XGBClassifier
 
 FORMAT = '%(levelname)-7s %(asctime)-15s %(name)-15s %(message)s'
 logging.basicConfig(level='INFO', format=FORMAT)
@@ -221,7 +222,7 @@ class VCFDataset_FS:
         return np.load(dataset_filepath)
 
 
-class Classifier:
+class Classifier_FS:
     """Ensemble classifier."""
 
     def __init__(self, features, n_trees=150, kind="SVM"):
@@ -245,6 +246,9 @@ class Classifier:
                                           learning_rate=0.024733289023679998,
                                           feature_fraction=0.8439020417557227, bagging_fraction=0.21552726628147978,
                                           min_child_samples=86)
+        elif kind.upper() == "XG" or kind.upper() == "XGBOOST":
+            self.kind = "XG"
+            self.clf = XGBClassifier(objective='binary:logistic', n_estimator = 100, learning_rate = 0.2, max_depth = 3, colsample_bytree = 0.9, min_child_weight = 5, subsample = 0.9)
         else:
             print("model is " + kind)
             logger = logging.getLogger(self.__class__.__name__)
@@ -332,7 +336,7 @@ class VCFApply(_VCFExtract):
     :params str mode: kind of variants training on: 'SNP' or 'INDEL'.
     """
 
-    def __init__(self, filepath, classifier: Classifier, mode):
+    def __init__(self, filepath, classifier: Classifier_FS, mode):
         super().__init__(filepath)
         self.classifier = classifier
         self.vartype = mode.upper

@@ -219,7 +219,7 @@ class Classifier:
                                           feature_fraction = 0.8439020417557227, bagging_fraction = 0.21552726628147978, min_child_samples = 86)
         elif kind.upper() == "XG" or kind.upper() == "XGBOOST":
             self.kind = "XG"
-            self.clf = XGBClassifier(n_estimators=200, objective='binary:logistic', max_depth=3, learning_rate = 0.1)
+            self.clf = XGBClassifier(objective='binary:logistic', n_estimator = 100, learning_rate = 0.2, max_depth = 3, colsample_bytree = 0.9, min_child_weight = 5, subsample = 0.9)
         else:
             print("model is "+kind)
             logger = logging.getLogger(self.__class__.__name__)
@@ -273,8 +273,11 @@ class Classifier:
         elif self.kind == "XG":
             parameters = {
                 'n_estimators': [50, 100, 150, 200, 250],
-                'learning_rate': [0.00001, 0.0001, 0.001, 0.01, 0.1, 1],
-                'max_depth': [3, 6, 9]
+                'learning_rate': [0.01, 0.05, 0.1, 0.2, 0.3],
+                'max_depth': [3, 4, 5, 6, 7],
+                'min_child_weight': [1, 2, 3, 4, 5],
+                'subsample': [0.6, 0.7, 0.8, 0.9, 1.0],
+                'colsample_bytree': [0.6, 0.7, 0.8, 0.9, 1.0] 
             }
 
         logger.info(f"Kind: {self.kind}, {self.clf}")

@@ -25,7 +25,7 @@ def XGB_tuning(clf, X, y):
     logger.info("[classification_report] \n{}".format(classification_report(y_test, y_pred)))
 
     # 최적의 하이퍼파라미터 값 출력
-    best_params = {'n_estimators': 200, 'learning_rate': 0.1, 'max_depth': 3}
+    best_params = {'n_estimators': 100, 'learning_rate': 0.2, 'max_depth': 3, 'colsample_bytree': 0.9, 'min_child_weight': 5, 'subsample': 0.9}
     print("Best Hyperparameters:", best_params)
 
     # 최적의 하이퍼파라미터로 모델 훈련
