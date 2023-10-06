@@ -36,44 +36,44 @@ def main():
     X_test, y_test = dataset_test.get_dataset('*')
 
     # 모델 초기화
-    rf_model = Classifier(dataset_train.features, n_trees, 'RF')
+    #rf_model = Classifier(dataset_train.features, n_trees, 'RF')
     lgbm_model = Classifier(dataset_train.features, n_trees, 'LGBM')
     svm_model = Classifier(dataset_train.features, n_trees, 'SVM')
     xgb_model = Classifier(dataset_train.features, n_trees, 'XG')
 
     logger.info('-----train 진행-----')
     # 각 모델 학습
-    rf_model.fit(X_train, y_train)
+    #rf_model.fit(X_train, y_train)
     lgbm_model.fit(X_train, y_train)
     svm_model.fit(X_train, y_train)
     xgb_model.fit(X_train, y_train)
 
     logger.info('-----test 진행-----')
     # 각 모델 예측 확률
-    rf_probs = rf_model.predict_proba(X_test)[:, 1]
+    #rf_probs = rf_model.predict_proba(X_test)[:, 1]
     lgbm_probs = lgbm_model.predict_proba(X_test)[:, 1]
     svm_probs = svm_model.predict_proba(X_test)[:, 1]
     xgb_probs = xgb_model.predict_proba(X_test)[:, 1]
 
     logger.info('-----ROC, AUC 계산-----')
     # AUC 계산
-    rf_auc = roc_auc_score(y_test, rf_probs)
+    #rf_auc = roc_auc_score(y_test, rf_probs)
     lgbm_auc = roc_auc_score(y_test, lgbm_probs)
     svm_auc = roc_auc_score(y_test, svm_probs)
     xgb_auc = roc_auc_score(y_test, xgb_probs)
 
     # ROC 곡선 생성
-    rf_fpr, rf_tpr, _ = roc_curve(y_test, rf_probs)
+    #rf_fpr, rf_tpr, _ = roc_curve(y_test, rf_probs)
     lgbm_fpr, lgbm_tpr, _ = roc_curve(y_test, lgbm_probs)
     svm_fpr, svm_tpr, _ = roc_curve(y_test, svm_probs)
     xgb_fpr, xgb_tpr, _ = roc_curve(y_test, xgb_probs)
 
     # ROC 곡선 시각화
     plt.figure(figsize=(10, 7))
-    plt.plot(rf_fpr, rf_tpr, label=f'Random Forest (AUC = {rf_auc:.2f})')
-    plt.plot(lgbm_fpr, lgbm_tpr, label=f'LightGBM (AUC = {lgbm_auc:.2f})')
-    plt.plot(svm_fpr, svm_tpr, label=f'SVM (AUC = {svm_auc:.2f})')
-    plt.plot(xgb_fpr, xgb_tpr, label=f'XGBoost (AUC = {xgb_auc:.2f})')
+    #plt.plot(rf_fpr, rf_tpr, label=f'Random Forest (AUC = {rf_auc:.2f})')
+    plt.plot(lgbm_fpr, lgbm_tpr, label=f'LightGBM (AUC = {lgbm_auc:.3f})')
+    plt.plot(svm_fpr, svm_tpr, label=f'SVM (AUC = {svm_auc:.3f})')
+    plt.plot(xgb_fpr, xgb_tpr, label=f'XGBoost (AUC = {xgb_auc:.3f})')
     plt.plot([0, 1], [0, 1], 'k--')  # diagonal dotted line
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
